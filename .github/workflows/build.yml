@@ -19,12 +19,13 @@ permissions:
 jobs:
   build:
     runs-on: ${{ github.event_name == 'workflow_dispatch' && inputs.runner || 'ubuntu-latest' }}
+
     steps:
       - uses: actions/checkout@v5
         with:
           submodules: true
-      
-      - name: Update 
+
+      - name: Update
         run: |
           cd vanadium
           git fetch --tags
@@ -39,15 +40,15 @@ jobs:
           fi
 
       - name: Set ENV
-        run: | 
+        run: |
           chmod +x *.sh
           echo "unix_time=$(date +%s)" >> $GITHUB_ENV
-    
+
       - name: Build
         env:
-            DEBIAN_FRONTEND: noninteractive
-            LOCAL_TEST_JKS: ${{ secrets.LOCAL_TEST_JKS }}
-            STORE_TEST_JKS: ${{ secrets.STORE_TEST_JKS }}
+          DEBIAN_FRONTEND: noninteractive
+          LOCAL_TEST_JKS: ${{ secrets.LOCAL_TEST_JKS }}
+          STORE_TEST_JKS: ${{ secrets.STORE_TEST_JKS }}
         run: |
           ./build.sh
 
@@ -57,7 +58,6 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           mv $(find chromium/src/out/release -name '*arm64-v8a.aab') $VERSION-${{ env.unix_time }}-arm64-v8a.aab
           mv $(find chromium/src/out/release -name '*arm64-v8a.apk') $VERSION-${{ env.unix_time }}-arm64-v8a.apk
-          mv $(find chromium/src/out/release -name '*armeabi-v7a.apk') $VERSION-${{ env.unix_time }}-armeabi-v7a.apk
 
       - name: Publish
         uses: softprops/action-gh-release@v2
@@ -68,7 +68,6 @@ jobs:
           files: |
             ${{ env.VERSION }}-${{ env.unix_time }}-arm64-v8a.aab
             ${{ env.VERSION }}-${{ env.unix_time }}-arm64-v8a.apk
-            ${{ env.VERSION }}-${{ env.unix_time }}-armeabi-v7a.apk
 
       - name: Attest
         uses: actions/attest-build-provenance@v4
@@ -76,4 +75,3 @@ jobs:
           subject-path: |
             ${{ env.VERSION }}-${{ env.unix_time }}-arm64-v8a.aab
             ${{ env.VERSION }}-${{ env.unix_time }}-arm64-v8a.apk
-            ${{ env.VERSION }}-${{ env.unix_time }}-armeabi-v7a.apk
